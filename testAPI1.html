@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Weather Information</title>
+</head>
+<body>
+    <h1>Weather Information</h1>
+    <form id="zipcodeForm">
+        <label for="zipcodeInput">郵便番号：</label>
+        <input type="text" id="zipcodeInput">
+        <button type="submit">検索</button>
+    </form>
+    <div id="weatherInfo"></div>
+
+    <script>
+        document.getElementById('zipcodeForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            var zipcode = document.getElementById('zipcodeInput').value;
+            getWeather(zipcode);
+        });
+
+        function getWeather(zipcode) {
+            var url = 'https://map.yahooapis.jp/weather/V1/place';
+            var appid = 'dj00aiZpPTFxRGxoWDY5Wm5TTCZzPWNvbnN1bWVyc2VjcmV0Jng9NmY-'; // 自分のYahoo API AppIDに置き換える
+
+            var request = new XMLHttpRequest();
+            request.open('GET', url + '?appid=' + appid + '&postal=' + zipcode + '&output=json');
+            request.responseType = 'json';
+
+            request.onload = function() {
+                if (request.status === 200) {
+                    var response = request.response;
+                    if (response.ResultInfo.Status === 200) {
+                        displayWeather(response.Feature[0].Property.WeatherList.Weather);
+                    } else {
+                        displayError(response.ResultInfo.Message);
+                    }
+                } else {
+                    displayError('An error occurred');
+                }
+            };
+
+            request.onerror = function() {
+                displayError('An error occurred');
+            };
+
+            request.send();
+        }
+
+        function displayWeather(weather) {
+            var weatherInfoDiv = document.getElementById('weatherInfo');
+            weatherInfoDiv.innerHTML = '';
+
+            weather.forEach(function(w) {
+                var date = new Date(w.Date).toLocaleDateString();
+                var desc = w.Rainfall > 0 ? '雨' : '晴れ';
+                var tempMax = w.TemperatureMax;
+                var tempMin = w.TemperatureMin;
+
+                var weatherItemDiv = document.createElement('div');
+                weatherItemDiv.innerHTML = '<p>Date: ' + date + '</p>' +
+                                           '<p>Weather: ' + desc + '</p>' +
+                                           '<p>Max Temperature: ' + tempMax + '°C</p>' +
+                                           '<p>Min Temperature: ' + tempMin + '°C</p>';
+
+                weatherInfoDiv.appendChild(weatherItemDiv);
+            });
+        }
+
+        function displayError(message) {
+            var weatherInfoDiv = document.getElementById('weatherInfo');
+            weatherInfoDiv.innerHTML = '<p>Error: ' + message + '</p>';
+        }
+    </script>
+</body>
+</html>
+
